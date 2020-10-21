@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {onMount, tick} from 'svelte'
+	import {onMount} from 'svelte'
 	import Message from './Message.svelte'
 
 	import type {
@@ -17,16 +17,11 @@
 
 	let chatController: ChatController = null
 
-	// DEV-ONLY: A chatController for non-existent Lisa Simpson, who connects
-	// after X seconds and starts sending a message every 10 or so seconds
-	let chatController2: ChatController = null
-
 	let messages: Array<MessageInterface> = []
 
 	$: lastMessage = messages.length > 0 ? messages[messages.length - 1] : undefined
 
 	const handleNewMessage: MessageHandler = (text, author) => {
-		console.log(`[${roomId}][RECEIVE] "${text}" (${author})`)
 		// This simulates two different clients sending messages.. DEV ONLY!
 		// author = Math.random() > 0.666 ? author : 'John Doe'
 		messages = [...messages, {
@@ -38,10 +33,9 @@
 		}]
 	}
 
-
 	const handleMessageSend = () => {
 		if (!newMessageText) return
-		console.log(`[${roomId}][SEND] "${newMessageText}" (${name})`)
+
 		chatController.sendMessage(newMessageText)
 
 		newMessageText = ''
@@ -49,20 +43,8 @@
 		return false
 	}
 
-	///////////////////////////////////
-
 	onMount(() => {
 		chatController = chatFactory({roomId, name, messageHandler: handleNewMessage})
-		setTimeout(async () => {
-			tick()
-			console.log('[!] Lisa get\'s her own chatController')
-			chatController2 = chatFactory({roomId, name: "Lisa Simpson", messageHandler: () => {}})
-			setInterval(async () => {
-				tick()
-				chatController2.sendMessage("Hey what's happening dude? This is Lisa")
-			}, 10000)
-		}, 15000)
-
 	})
 </script>
 
