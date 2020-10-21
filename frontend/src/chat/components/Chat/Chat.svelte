@@ -1,10 +1,9 @@
 <script lang="ts">
-	import {onMount, afterUpdate} from 'svelte'
+	import {onMount} from 'svelte'
 	import Message from './Message.svelte'
 
 	import type {
 		MessageHandler,
-		EmitHandler,
 		Message as MessageInterface,
 		ChatController,
 		ChatSettings,
@@ -19,8 +18,19 @@
 	let chatController: ChatController = null
 
 	let messages: Array<MessageInterface> = []
+
+	$: lastMessage = messages.length > 0 ? messages[messages.length - 1] : undefined
+
 	const handleNewMessage: MessageHandler = (text, author) => {
-		messages = [...messages, {text, author, timestamp: new Date()}]
+		// This simulates two different clients sending messages.. DEV ONLY!
+		// author = Math.random() > 0.666 ? author : 'John Doe'
+		messages = [...messages, {
+			text,
+			author,
+			timestamp: new Date(),
+			isConsecutive: lastMessage?.author === author,
+			userIsAuthor: author === name
+		}]
 	}
 
 	const handleMessageSend = () => {
@@ -56,7 +66,7 @@
 		flex-direction: column;
 		justify-content: flex-end;
 		height: calc(100% - 120px);
-		padding: 0 24px;
+		padding: 0 8px;
 	}
 
 	.sidebar__footer {
