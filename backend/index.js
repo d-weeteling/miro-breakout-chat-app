@@ -6,11 +6,18 @@ var socketConfig = require('./config')
 var io = require('socket.io')(http, socketConfig)
 var port = process.env.PORT || 8081
 
-var rooms = {}
+var rooms = {} // key=roomId; value={socketId: socketObject}
 var roomsCreatedAt = new WeakMap()
 var names = new WeakMap()
 var roomId
 var name
+
+function getClientName(socket) {
+	var author = names.get(socket)
+	if (author) return author
+	console.error('[ERROR] Cannot find clientName for socket with id: ' + socket.id)
+	return 'Unknown name'
+}
 
 app.use(cors())
 
@@ -21,7 +28,7 @@ app.get('/rooms/:roomId', (req, res) => {
 	if (room) {
 		res.json({
 			createdAt: roomsCreatedAt.get(room),
-			users: Object.values(room).map((socket) => names.get(socket)),
+			users: Object.values(room).map(getClientName),
 		})
 	} else {
 		res.status(500).end()
@@ -63,14 +70,16 @@ io.on('connection', (socket) => {
 	})
 
 	socket.on('chat message', (msg) => {
-		io.to(roomId).emit('chat message', msg, name)
+		io.to(roomId).emit('chat message', msg, getClientName(socket))
 	})
 
 	socket.on('disconnect', () => {
-		io.to(roomId).emit('system message', `${name} left ${roomId}`)
+		io.to(roomId).emit('system message', `${getClientName(socket)} left ${roomId}`)
 
+		// Delete the specific socket from the room:
 		delete rooms[roomId][socket.id]
 
+		// If no more users are connected, delete the room:
 		const room = rooms[roomId]
 		if (!Object.keys(room).length) {
 			delete rooms[roomId]
