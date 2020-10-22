@@ -1,5 +1,8 @@
+import type { AuthSettings } from '../chat/interfaces/chat'
 import {CLIENT_ID} from '../config'
 import appIcon from './icon'
+
+export let authSettings: AuthSettings| undefined
 
 const initChat = (breakoutChatRoomId: string) => {
 	miro.__setRuntimeState({
@@ -43,6 +46,8 @@ const handleAddChatClick = async () => {
 }
 
 const initPlugin = async () => {
+	authSettings = await getAuthSettings()
+	if (!authSettings) return
 	// @ts-ignore
 	miro.addListener(miro.enums.event.SELECTION_UPDATED, async () => {
 		const widgets = await miro.board.selection.get()
@@ -60,6 +65,38 @@ const initPlugin = async () => {
 			},
 		},
 	})
+}
+
+const getCurrentUserName = async () => {
+	const id = await miro.currentUser.getId()
+	// @ts-ignore
+	const onlineUsers = await miro.board.getOnlineUsers()
+
+	return onlineUsers.find((user) => user.id === id)?.name
+}
+
+const getAuthSettings = async (): Promise<AuthSettings | undefined> => {
+	const username = await getCurrentUserName()
+	const token = await miro.getToken()
+	const boardInfo = await miro.board.info.get()
+	const currentBoardPermissions = boardInfo.currentUserPermissions
+
+	// Somewhat debatable mapping from 'currentBoardPermissions' to 'user may
+	// use the chat functionality': I've decided that at least one of the
+	// following three board permissions needs to be set: "EDIT_INFO",
+	// "EDIT_CONTENT", "EDIT_COMMENTS".
+	// NB! Decide with the rest of the team whether this is strict enough.
+	const userMayEdit = currentBoardPermissions.indexOf('EDIT_INFO') > - 1
+		|| currentBoardPermissions.indexOf('EDIT_CONTENT') > - 1
+		|| currentBoardPermissions.indexOf('EDIT_COMMENTS') > - 1
+
+	if (username && token && boardInfo.id && userMayEdit)
+		return {
+			username,
+			token,
+			boardId: boardInfo.id,
+			mayReadWriteBoard: true
+		}
 }
 
 miro.onReady(async () => {
