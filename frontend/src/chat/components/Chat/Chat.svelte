@@ -25,8 +25,6 @@
 	$: lastMessage = messages.length > 0 ? messages[messages.length - 1] : undefined
 
 	const handleNewMessage: MessageHandler = (text, author) => {
-		// This simulates two different clients sending messages.. DEV ONLY!
-		// author = Math.random() > 0.666 ? author : 'John Doe'
 		messages = [...messages, {
 			text,
 			author,

@@ -1,13 +1,11 @@
 var express = require('express')
 var fetch = require("node-fetch");
-
 var app = express()
 var cors = require('cors')
 var http = require('http').Server(app)
 var socketConfig = require('./config')
 var io = require('socket.io')(http, socketConfig)
 var port = process.env.PORT || 8081
-
 
 var rooms = {} // NB! This Object looks like: key => roomId; value => {socketId: socketObject}
 var roomsCreatedAt = new WeakMap()
@@ -19,7 +17,7 @@ async function validate(boardId, token) {
 	const url = `https://api.miro.com/v1/boards/${boardId}`
 	const response = await fetch(url, {headers: {Authorization: `Bearer ${token}`}})
 
-	// If the user is now allowed to fetch the board data, return false:
+	// If the user is not allowed to fetch the board data, return false:
 	if(response.statusText !== 'OK')
 		return false
 
