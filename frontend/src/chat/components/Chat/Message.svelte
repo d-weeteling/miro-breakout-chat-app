@@ -43,7 +43,7 @@
     	.message__timestamp {
         	margin: 0 5px;
         	padding-top: 10px;
-      	color: #bbb;
+      	color: #827F9B;
 	}
 
     	.message__timestamp.hidden {
