@@ -3,8 +3,8 @@ import Chat from './components/Chat/Chat.svelte'
 import Error from './components/Error.svelte'
 
 import {CLIENT_ID} from '../config'
-import type { AuthSettings } from './interfaces/chat'
-import { getAuthSettings } from '../init/main'
+import type {AuthSettings} from './interfaces/chat'
+import {getAuthSettings} from '../init/auth'
 
 const initApp = (roomId: string, authSettings: AuthSettings) => {
 	new Chat({
@@ -18,8 +18,9 @@ const initApp = (roomId: string, authSettings: AuthSettings) => {
 }
 
 miro.onReady(async () => {
-	const authSettings = await getAuthSettings()
+	const authSettings: AuthSettings = await getAuthSettings()
 	const savedState = await miro.__getRuntimeState()
+
 	if (savedState[CLIENT_ID]?.breakoutChatRoomId && authSettings) {
 		initApp(savedState[CLIENT_ID]?.breakoutChatRoomId, authSettings)
 	} else {
