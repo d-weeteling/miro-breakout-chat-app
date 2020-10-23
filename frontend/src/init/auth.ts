@@ -21,11 +21,13 @@ const __getAuthSettings = async (): Promise<AuthSettings|undefined> => {
 	// Somewhat debatable mapping from 'currentBoardPermissions' to 'user may
 	// use the chat functionality': I've decided that at least one of the
 	// following three board permissions needs to be set: "EDIT_INFO",
-	// "EDIT_CONTENT", "EDIT_COMMENTS".
-	// NB! Decide with the rest of the team whether this is strict enough.
-	const userMayEdit = currentBoardPermissions.indexOf('EDIT_INFO') > - 1
-		|| currentBoardPermissions.indexOf('EDIT_CONTENT') > - 1
-		|| currentBoardPermissions.indexOf('EDIT_COMMENTS') > - 1
+	// "EDIT_CONTENT", "EDIT_COMMENTS". NB! Decide with the rest of the team
+	// whether this is strict enough.
+	//
+	// Since the local var currentBoardPermissions is typed (SDK.BoardPermission[]),
+	// it's implied that if it's length is greater than 0, at least one of the
+	// three permissions is set. Therefore, checking can be done easy like this:
+	const userMayEdit = currentBoardPermissions.length > 0
 
 	if (username && token && boardInfo.id && userMayEdit)
 		return {
