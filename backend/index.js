@@ -1,4 +1,6 @@
 var express = require('express')
+var fetch = require("node-fetch");
+
 var app = express()
 var cors = require('cors')
 var http = require('http').Server(app)
@@ -6,11 +8,26 @@ var socketConfig = require('./config')
 var io = require('socket.io')(http, socketConfig)
 var port = process.env.PORT || 8081
 
+
 var rooms = {} // NB! This Object looks like: key => roomId; value => {socketId: socketObject}
 var roomsCreatedAt = new WeakMap()
 var names = new WeakMap()
 var roomId
 var name
+
+async function validate(boardId, token) {
+	const url = `https://api.miro.com/v1/boards/${boardId}`
+	const response = await fetch(url, {headers: {Authorization: `Bearer ${token}`}})
+
+	// If the user is now allowed to fetch the board data, return false:
+	if(response.statusText !== 'OK')
+		return false
+
+	// Available roles: viewer, commenter, editor, owner. I presume only viewer
+	// has a read-only role. Check whether the user has a different role than viewer:
+	const role = (await response.json()).currentUserConnection.role.toLowerCase()
+	return role !== 'viewer'
+}
 
 function getClientName(socket) {
 	var author = names.get(socket)
@@ -37,6 +54,19 @@ app.get('/rooms/:roomId', (req, res) => {
 
 app.get('/rooms', (req, res) => {
 	res.json(Object.keys(rooms))
+})
+
+io.use(async (socket, next) => {
+	const { boardId, token } = socket.handshake.query
+	console.log(`A new connection was made for board: ${boardId}`)
+	console.log(`The user has token: ${token}`)
+	if (await validate(boardId, token)) {
+		console.log('=> Token validated? YES')
+		next()
+	} else {
+		console.log('=> Token validated? NO')
+		next(new Error('Invalid token/boardId combination!'))
+	}
 })
 
 io.on('connection', (socket) => {

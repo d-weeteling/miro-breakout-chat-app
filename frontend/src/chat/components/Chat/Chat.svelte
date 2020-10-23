@@ -7,11 +7,14 @@
 		Message as MessageInterface,
 		ChatController,
 		ChatSettings,
+		AuthSettings,
 	} from '../../interfaces/chat'
 
 	export let chatFactory: (settings: ChatSettings) => ChatController
 	export let roomId: string
-	export let name: string
+	export let authSettings: AuthSettings
+
+	const { username } = authSettings
 
 	let newMessageText: string = ''
 
@@ -29,7 +32,7 @@
 			author,
 			timestamp: new Date(),
 			isConsecutive: lastMessage?.author === author,
-			userIsAuthor: author === name
+			userIsAuthor: author === username
 		}]
 	}
 
@@ -44,7 +47,7 @@
 	}
 
 	onMount(() => {
-		chatController = chatFactory({roomId, name, messageHandler: handleNewMessage})
+		chatController = chatFactory({roomId, authSettings, messageHandler: handleNewMessage})
 	})
 </script>
 

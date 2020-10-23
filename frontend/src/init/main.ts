@@ -1,5 +1,9 @@
+
 import {CLIENT_ID} from '../config'
 import appIcon from './icon'
+
+import type { AuthSettings } from '../chat/interfaces/chat'
+import { getAuthSettings } from './auth'
 
 const initChat = (breakoutChatRoomId: string) => {
 	miro.__setRuntimeState({
@@ -43,20 +47,29 @@ const handleAddChatClick = async () => {
 }
 
 const initPlugin = async () => {
-	// @ts-ignore
-	miro.addListener(miro.enums.event.SELECTION_UPDATED, async () => {
-		const widgets = await miro.board.selection.get()
-		if (widgets.length === 1 && widgets[0].metadata[CLIENT_ID]?.isBreakoutChatButton) {
-			initChat(widgets[0].id)
-		}
-	})
+	const authSettings: AuthSettings|undefined = await getAuthSettings()
+	let onClick: () => Promise<void>
+
+	if(authSettings) {
+		// @ts-ignore
+		miro.addListener(miro.enums.event.SELECTION_UPDATED, async () => {
+			const widgets = await miro.board.selection.get()
+			if (widgets.length === 1 && widgets[0].metadata[CLIENT_ID]?.isBreakoutChatButton) {
+				initChat(widgets[0].id)
+			}
+		})
+		onClick = handleAddChatClick
+	} else
+		onClick = () => miro.showNotification(
+			'We\'re sorry, but your permissions for this board are insufficient to use the chat functionality'
+		)
 
 	await miro.initialize({
 		extensionPoints: {
 			bottomBar: {
 				title: 'Create a new breakout chat',
 				svgIcon: appIcon,
-				onClick: handleAddChatClick,
+				onClick
 			},
 		},
 	})
