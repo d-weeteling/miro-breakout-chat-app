@@ -47,7 +47,6 @@
 	}
 
 	onMount(() => {
-		// chatController = chatFactory({roomId, name: username, messageHandler: handleNewMessage})
 		chatController = chatFactory({roomId, authSettings, messageHandler: handleNewMessage})
 	})
 </script>
